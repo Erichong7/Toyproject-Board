@@ -48,4 +48,12 @@ public class PostController {
             @RequestAttribute("userId") Long userId) {
         return ResponseEntity.ok(postService.update(id, request, userId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestAttribute("userId") Long userId) {
+        postService.delete(id, userId);
+        return ResponseEntity.noContent().build();
+    }
 }
