@@ -1,6 +1,7 @@
 package com.example.ToyProject_Board.domain.post;
 
 import com.example.ToyProject_Board.domain.post.dto.request.PostCreateRequest;
+import com.example.ToyProject_Board.domain.post.dto.response.PostListResponse;
 import com.example.ToyProject_Board.domain.post.dto.response.PostResponse;
 import com.example.ToyProject_Board.domain.post.repository.PostRepository;
 import com.example.ToyProject_Board.domain.post.service.PostService;
@@ -12,7 +13,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +93,27 @@ public class PostServiceTest {
         assertThatThrownBy(() -> postService.create(request, 1L))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("유저를 찾을 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("게시글 목록 조회 성공")
+    void getListSuccess() {
+        // todo 게시글 목록 조회 테스트 작성
+        // given
+        User user = createUser();
+        Post post1 = createPost(user);
+        Post post2 = createPost(user);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(List.of(post1, post2));
+
+        given(postRepository.findAll(pageable)).willReturn(postPage);
+
+        // when
+        Page<PostListResponse> response = postService.getList(pageable);
+
+        // then
+        assertThat(response.getContent()).hasSize(2);
+        assertThat(response.getContent().get(0).getTitle()).isEqualTo("테스트 제목");
     }
 
 }
