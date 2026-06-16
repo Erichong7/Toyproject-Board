@@ -34,4 +34,9 @@ public class PostController {
             direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(postService.getList(pageable));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PostResponse> getOne(@PathVariable Long id) {
+        return ResponseEntity.ok(postService.getOne(id));
+    }
 }

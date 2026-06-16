@@ -38,9 +38,18 @@ public class PostService {
         return new PostResponse(postRepository.save(post));
     }
 
+    // 게시글 목록 조회
     public Page<PostListResponse> getList(Pageable pageable) {
         return postRepository.findAll(pageable)
                 .map(PostListResponse::new);
+    }
+
+    // 게시글 단건 조회
+    public PostResponse getOne(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다"));
+
+        return new PostResponse(post);
     }
 
 }
