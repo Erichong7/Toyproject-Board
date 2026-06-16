@@ -1,6 +1,7 @@
 package com.example.ToyProject_Board.domain.post;
 
 import com.example.ToyProject_Board.domain.post.dto.request.PostCreateRequest;
+import com.example.ToyProject_Board.domain.post.dto.request.PostUpdateRequest;
 import com.example.ToyProject_Board.domain.post.dto.response.PostListResponse;
 import com.example.ToyProject_Board.domain.post.dto.response.PostResponse;
 import com.example.ToyProject_Board.domain.post.repository.PostRepository;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.spy;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
@@ -40,13 +43,11 @@ public class PostServiceTest {
 
     // 테스트용 유저 생성 헬퍼
     private User createUser() {
-        User user = User.builder()
+        return User.builder()
                 .email("test@test.com")
                 .password("test1234")
                 .nickname("테스터")
                 .build();
-
-        return user;
     }
 
     // 테스트용 게시글 생성 헬퍼
@@ -116,9 +117,8 @@ public class PostServiceTest {
     }
 
     @Test
-    @DisplayName("게시글 단건 조회")
+    @DisplayName("게시글 단건 조회 성공")
     void getPostSuccess() {
-        // todo 게시글 단건 조회 테스트 작성
         // given
         User user = createUser();
         Post post = createPost(user);
@@ -146,4 +146,55 @@ public class PostServiceTest {
                 .hasMessage("게시글을 찾을 수 없습니다");
     }
 
+    @Test
+    @DisplayName("게시글 수정 성공")
+    void updateSuccess() {
+        // given
+        User user = createUser();
+        ReflectionTestUtils.setField(user, "id", 1L); // userId 설정
+        Post post = createPost(user);
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        // when
+        PostResponse response = postService.update(1L, new PostUpdateRequest("수정된 제목", "수정된 내용"), 1L);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("수정된 제목");
+        assertThat(response.getContent()).isEqualTo("수정된 내용");
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 - 권한 없음")
+    void updateFailUnauthorized() {
+        // given
+        User user = createUser();
+        ReflectionTestUtils.setField(user, "id", 1L); // userId 설정
+        User other = User.builder()
+                .email("other@test.com")
+                .password("test1234")
+                .nickname("다른 유저")
+                .build();
+        ReflectionTestUtils.setField(other, "id", 2L); // otherId 설정
+        Post post = createPost(user);
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        // when & then
+        assertThatThrownBy(() -> postService.update(1L, new PostUpdateRequest("수정된 제목", "수정된 내용"), 2L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("게시글 수정 권한이 없습니다");
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 - 게시글 없음")
+    void updateFailNotFound() {
+        // given
+        given(postRepository.findById(1L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postService.update(1L, new PostUpdateRequest("수정된 제목", "수정된 내용"), 1L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("게시글을 찾을 수 없습니다");
+    }
 }
