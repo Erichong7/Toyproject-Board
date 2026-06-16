@@ -98,7 +98,6 @@ public class PostServiceTest {
     @Test
     @DisplayName("게시글 목록 조회 성공")
     void getListSuccess() {
-        // todo 게시글 목록 조회 테스트 작성
         // given
         User user = createUser();
         Post post1 = createPost(user);
@@ -114,6 +113,37 @@ public class PostServiceTest {
         // then
         assertThat(response.getContent()).hasSize(2);
         assertThat(response.getContent().get(0).getTitle()).isEqualTo("테스트 제목");
+    }
+
+    @Test
+    @DisplayName("게시글 단건 조회")
+    void getPostSuccess() {
+        // todo 게시글 단건 조회 테스트 작성
+        // given
+        User user = createUser();
+        Post post = createPost(user);
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        // when
+        PostResponse response = postService.getOne(1L);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("테스트 제목");
+        assertThat(response.getContent()).isEqualTo("테스트 내용");
+        assertThat(response.getNickname()).isEqualTo("테스터");
+    }
+
+    @Test
+    @DisplayName("게시글 단건 조회 실패 - 게시글 없음")
+    void getOneFailNotFound() {
+        // given
+        given(postRepository.findById(1L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postService.getOne(1L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("게시글을 찾을 수 없습니다");
     }
 
 }
