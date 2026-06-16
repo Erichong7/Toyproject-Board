@@ -22,11 +22,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
@@ -194,6 +193,51 @@ public class PostServiceTest {
 
         // when & then
         assertThatThrownBy(() -> postService.update(1L, new PostUpdateRequest("수정된 제목", "수정된 내용"), 1L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("게시글을 찾을 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 성공")
+    void deleteSuccess() {
+        // given
+        User user = createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+        Post post = createPost(user);
+        ReflectionTestUtils.setField(post, "id", 1L);
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        // when & then
+        assertThatCode(() -> postService.delete(1L, 1L))
+                .doesNotThrowAnyException();
+        verify(postRepository, times(1)).delete(post);   // delete가 post 인자로 호출됐는지 검증
+    }
+    @Test
+    @DisplayName("게시글 삭제 실패 - 권한 없음")
+    void deleteFailUnauthorized() {
+        // given
+        User user = createUser();
+        ReflectionTestUtils.setField(user, "id", 1L); // userId 설정
+        Post post = createPost(user);
+        ReflectionTestUtils.setField(post, "id", 1L); // postId 설정
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        // when & then
+        assertThatThrownBy(() -> postService.delete(1L, 2L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("게시글 삭제 권한이 없습니다");
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 - 게시글 없음")
+    void deleteFailNotFound() {
+        // given
+        given(postRepository.findById(1L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postService.delete(1L, 1L))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("게시글을 찾을 수 없습니다");
     }
