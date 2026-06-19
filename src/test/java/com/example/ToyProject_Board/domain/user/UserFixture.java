@@ -1,19 +1,20 @@
 package com.example.ToyProject_Board.domain.user;
 
-import java.lang.reflect.Field;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class UserFixture {
-    public static User createWithId(Long id) throws Exception {
-        User user = User.builder()
+
+    public static User create() {
+        return User.builder()
                 .email("test@test.com")
-                .password("test1234")
+                .password("encoded_password")
                 .nickname("테스터")
                 .build();
+    }
 
-        Field idField = User.class.getDeclaredField("id");
-        idField.setAccessible(true);
-        idField.set(user, id);
-
+    public static User createWithId(Long id) {
+        User user = create();
+        ReflectionTestUtils.setField(user, "id", id);
         return user;
     }
 }

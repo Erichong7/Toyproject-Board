@@ -29,7 +29,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
-    // todo 테스트 코드 작성
 
     @InjectMocks
     private PostService postService;
@@ -40,7 +39,6 @@ public class PostServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    // 테스트용 유저 생성 헬퍼
     private User createUser() {
         return User.builder()
                 .email("test@test.com")
@@ -49,7 +47,6 @@ public class PostServiceTest {
                 .build();
     }
 
-    // 테스트용 게시글 생성 헬퍼
     private Post createPost(User user) {
         return Post.builder()
                 .title("테스트 제목")
@@ -57,10 +54,6 @@ public class PostServiceTest {
                 .user(user)
                 .build();
     }
-
-    /*
-    게시글 작성 테스트
-     */
 
     @Test
     @DisplayName("게시글 작성 성공")
@@ -150,7 +143,7 @@ public class PostServiceTest {
     void updateSuccess() {
         // given
         User user = createUser();
-        ReflectionTestUtils.setField(user, "id", 1L); // userId 설정
+        ReflectionTestUtils.setField(user, "id", 1L);
         Post post = createPost(user);
 
         given(postRepository.findById(1L)).willReturn(Optional.of(post));
@@ -168,13 +161,7 @@ public class PostServiceTest {
     void updateFailUnauthorized() {
         // given
         User user = createUser();
-        ReflectionTestUtils.setField(user, "id", 1L); // userId 설정
-        User other = User.builder()
-                .email("other@test.com")
-                .password("test1234")
-                .nickname("다른 유저")
-                .build();
-        ReflectionTestUtils.setField(other, "id", 2L); // otherId 설정
+        ReflectionTestUtils.setField(user, "id", 1L);
         Post post = createPost(user);
 
         given(postRepository.findById(1L)).willReturn(Optional.of(post));
@@ -211,16 +198,17 @@ public class PostServiceTest {
         // when & then
         assertThatCode(() -> postService.delete(1L, 1L))
                 .doesNotThrowAnyException();
-        verify(postRepository, times(1)).delete(post);   // delete가 post 인자로 호출됐는지 검증
+        verify(postRepository, times(1)).delete(post);
     }
+
     @Test
     @DisplayName("게시글 삭제 실패 - 권한 없음")
     void deleteFailUnauthorized() {
         // given
         User user = createUser();
-        ReflectionTestUtils.setField(user, "id", 1L); // userId 설정
+        ReflectionTestUtils.setField(user, "id", 1L);
         Post post = createPost(user);
-        ReflectionTestUtils.setField(post, "id", 1L); // postId 설정
+        ReflectionTestUtils.setField(post, "id", 1L);
 
         given(postRepository.findById(1L)).willReturn(Optional.of(post));
 
